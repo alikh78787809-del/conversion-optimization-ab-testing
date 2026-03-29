@@ -152,12 +152,12 @@ Instead of stopping at statistical significance, the analysis connects the resul
 
 ## Author
 
-Sanman Kadam
-MSc Statistics | Data Analyst | Data Science Enthusiast
+**Sanman Kadam**  
+MSc Statistics | Aspiring Data Analyst / Data Scientist  
 
 GitHub: https://github.com/the-irritater
 
 ---
 
-*Created as a demonstration of advanced statistical analysis and business intelligence methodologies.*
+**Created as a portfolio project demonstrating applied A/B testing, causal reasoning, and business decision-making.**
 =======
