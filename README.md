@@ -79,16 +79,16 @@ The analysis relies on standard Python data science libraries:
 * **Bayesian Outcome:** There is a nearly 100% probability that the variant outperforms the control, with almost zero expected loss.
 * **Business Value:** Projected $2.4M in annualized incremental revenue upon 100% rollout.
 
-## 📊 Key Insights
+## Key Insights
 
 ### Conversion Lift
-![Conversion](assets/conversion_rate.png)
+![Conversion_Rate](assets/conversion_rate.png)
 
 ### Causal Impact (Logistic Regression)
 ![Odds Ratio](assets/odds_ratio_plot.png)
 
 ### Segment Analysis (Device Type)
-![Device](assets/device_conversion.png)
+![Device](assets/revenue_impact.png)
 
 ---
 *Created as a demonstration of advanced statistical analysis and business intelligence methodologies.*
