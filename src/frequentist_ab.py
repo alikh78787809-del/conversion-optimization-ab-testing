@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.stats as stats
-from typing import Dict, Any, Tuple
+from typing import Dict, Any
 
 class FrequentistABTesting:
     """
@@ -9,12 +9,23 @@ class FrequentistABTesting:
     """
 
     @staticmethod
-    def z_test_proportions(control_conversions: int, control_trials: int, 
-                           treatment_conversions: int, treatment_trials: int) -> Dict[str, Any]:
+    def z_test_proportions(
+        control_conversions: int,
+        control_trials: int,
+        treatment_conversions: int,
+        treatment_trials: int,
+        alpha: float = 0.05,
+        alternative: str = "greater",
+    ) -> Dict[str, Any]:
         """
-        Perform a Z-test for proportions, typically used for conversion rate metrics.
-        
-        :return: A dictionary containing p-value, z-statistic, and confidence intervals.
+        Perform a two-proportion Z-test for conversion rates.
+
+        By default this uses a one-sided business decision framing:
+        H0: p_new <= p_old
+        H1: p_new > p_old
+
+        :return: A dictionary containing p-value, z-statistic, confidence interval,
+                 and a decision summary suitable for launch recommendations.
         """
         p_control = control_conversions / control_trials
         p_treatment = treatment_conversions / treatment_trials
@@ -24,7 +35,14 @@ class FrequentistABTesting:
         se_pooled = np.sqrt(p_pooled * (1 - p_pooled) * (1/control_trials + 1/treatment_trials))
         
         z_stat = (p_treatment - p_control) / se_pooled
-        p_value = 2 * (1 - stats.norm.cdf(np.abs(z_stat))) # Two-sided
+        if alternative == "greater":
+            p_value = 1 - stats.norm.cdf(z_stat)
+        elif alternative == "less":
+            p_value = stats.norm.cdf(z_stat)
+        elif alternative == "two-sided":
+            p_value = 2 * (1 - stats.norm.cdf(np.abs(z_stat)))
+        else:
+            raise ValueError("alternative must be 'greater', 'less', or 'two-sided'")
         
         # 95% Confidence Interval for the difference in proportions
         se_diff = np.sqrt(p_control * (1 - p_control) / control_trials + 
@@ -35,16 +53,28 @@ class FrequentistABTesting:
         ci_lower = diff - z_critical * se_diff
         ci_upper = diff + z_critical * se_diff
         
+        is_significant = p_value < alpha
+        decision = "Reject H0" if is_significant else "Fail to reject H0"
+        recommendation = (
+            "Statistically significant improvement detected -> launch is supported."
+            if is_significant and diff > 0
+            else "No statistically significant improvement detected -> do not launch."
+        )
+
         return {
             'z_statistic': z_stat,
             'p_value': p_value,
+            'alpha': alpha,
+            'alternative': alternative,
             'control_cr': p_control,
             'treatment_cr': p_treatment,
             'absolute_difference': diff,
             'relative_lift': (diff / p_control) if p_control > 0 else 0,
             'ci_95_lower': ci_lower,
             'ci_95_upper': ci_upper,
-            'is_significant': p_value < 0.05
+            'is_significant': is_significant,
+            'decision': decision,
+            'recommendation': recommendation,
         }
 
     @staticmethod

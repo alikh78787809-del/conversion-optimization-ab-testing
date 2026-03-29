@@ -218,7 +218,7 @@ plt.show()
 
 add_md("""**Interpretation:**
 * **Sample Size Check:** The traffic split is practically 50/50, indicating our randomization mechanism worked and there is no Sample Ratio Mismatch (SRM). 
-* **Conversion Rate:** The Control group has a conversion rate of roughly 24.1%, while the Variant sits at ~28.6%. This is an absolute lift of ~4.5%. While this looks visually promising, we must statistically test if this difference is significant and not due to random chance.
+* **Conversion Rate:** In this seeded run, the Control group converts at roughly 19.4% while the Variant converts at about 24.2%. That is an absolute uplift of about 4.8 percentage points, which looks promising but still needs formal testing.
 
 ### 5.2. Segment Analysis (Device and Customer Type)
 Let's see how conversion changes across different user dimensions.
@@ -265,13 +265,17 @@ add_md("""**Interpretation:**
 
 ## 6. Statistical Hypothesis Testing
 
-### 6.1. Two-Proportion Z-Test (Frequentist Approach)
-We want to test if the observed effect (Variant > Control) is statistically significant.
+### 6.1. Business Decision Framing
+The launch question is directional: we only want to ship the new checkout if it increases conversion.
 
 **Hypotheses:**
-* **$H_0$ (Null):** $P_{variant} - P_{control} \\le 0$ (The new checkout does not increase conversion).
-* **$H_1$ (Alternative):** $P_{variant} - P_{control} > 0$ (The new checkout increases conversion).
-* **Alpha ($\\alpha$):** $0.05$
+* **$H_0$:** $p_{new} \\le p_{old}$ 
+* **$H_1$:** $p_{new} > p_{old}$
+
+**Statistical Test:**
+* **Two-proportion z-test**
+* **Significance level ($\\alpha$):** 0.05
+* **Decision rule:** If the one-sided p-value is below 0.05, reject $H_0$ and support launch.
 """)
 
 add_code("""# Compute summary stats
@@ -289,27 +293,90 @@ pooled_p = (control_conv + variant_conv) / (control_n + variant_n)
 # Standard error
 se = np.sqrt(pooled_p * (1 - pooled_p) * (1/control_n + 1/variant_n))
 
-# Z-score and P-value
+# Z-score and one-sided p-value for:
+# H0: p_new <= p_old
+# H1: p_new > p_old
 z_stat = (variant_p - control_p) / se
 p_value = 1 - norm.cdf(z_stat)
 
+# 95% confidence interval for the uplift
+se_diff = np.sqrt(
+    (control_p * (1 - control_p) / control_n) +
+    (variant_p * (1 - variant_p) / variant_n)
+)
+uplift = variant_p - control_p
+ci_lower = uplift - 1.96 * se_diff
+ci_upper = uplift + 1.96 * se_diff
+relative_lift = uplift / control_p
+
 print(f"Control Conversion: {control_p:.4f} ({control_conv}/{control_n})")
 print(f"Variant Conversion: {variant_p:.4f} ({variant_conv}/{variant_n})")
-print(f"Absolute Uplift:    {(variant_p - control_p):.4f}")
-print(f"Relative Uplift:    {((variant_p - control_p) / control_p):.4f}")
+print(f"Absolute Uplift:    {uplift:.4f}")
+print(f"Relative Uplift:    {relative_lift:.2%}")
 print("-" * 30)
 print(f"Z-Statistic:        {z_stat:.4f}")
-print(f"P-Value:            {p_value:.4e}")
+print(f"P-Value:            {p_value:.6f}")
+print(f"95% CI (uplift):    [{ci_lower:.4f}, {ci_upper:.4f}]")
 
 if p_value < 0.05:
-    print("\\nConclusion: Reject the Null Hypothesis. The uplift is statistically significant.")
+    print("\\nBusiness Conclusion: We reject H0 -> statistically significant improvement -> launch is supported.")
 else:
-    print("\\nConclusion: Fail to reject the Null Hypothesis. The uplift is not statistically significant.")
+    print("\\nBusiness Conclusion: We fail to reject H0 -> no significant improvement -> do not launch.")
 """)
 
 add_md("""**Interpretation:**
-The absolute uplift is approximately 4.5%, leading to an **18.7% relative increase** in conversion. The calculated P-Value is astronomically small ($< 0.0001$), sitting well below our $\\alpha = 0.05$ threshold. 
-**Business Implication:** From a pure Frequentist standpoint, we can confidently deploy the "One-Click Checkout" as the result is highly statistically significant.
+The variant delivers a positive absolute uplift and the **p-value is shown explicitly**, so the decision is audit-friendly. Because the one-sided p-value is far below 0.05, this experiment provides evidence that the new checkout performs better than the old one.
+
+### 6.2. Advanced Layer: Confidence Interval Visualization
+P-values answer whether the observed lift is statistically surprising under the null. Confidence intervals add the missing business context: they show the plausible range of the uplift size, which helps assess whether the effect is merely significant or also meaningful.
+""")
+
+add_code("""ci_df = pd.DataFrame({
+    'group': ['Control Conversion', 'Variant Conversion', 'Variant - Control Uplift'],
+    'point_estimate': [control_p, variant_p, uplift],
+    'ci_lower': [
+        control_p - 1.96 * np.sqrt(control_p * (1 - control_p) / control_n),
+        variant_p - 1.96 * np.sqrt(variant_p * (1 - variant_p) / variant_n),
+        ci_lower
+    ],
+    'ci_upper': [
+        control_p + 1.96 * np.sqrt(control_p * (1 - control_p) / control_n),
+        variant_p + 1.96 * np.sqrt(variant_p * (1 - variant_p) / variant_n),
+        ci_upper
+    ]
+})
+
+plot_df = ci_df.iloc[::-1].reset_index(drop=True)
+
+plt.figure(figsize=(10, 4))
+plt.errorbar(
+    x=plot_df['point_estimate'],
+    y=plot_df['group'],
+    xerr=[
+        plot_df['point_estimate'] - plot_df['ci_lower'],
+        plot_df['ci_upper'] - plot_df['point_estimate']
+    ],
+    fmt='o',
+    color='#1f77b4',
+    ecolor='#4c72b0',
+    capsize=5
+)
+plt.axvline(0, color='red', linestyle='--', linewidth=1.5, label='No uplift threshold')
+plt.title('Confidence Intervals for Conversion Rates and Uplift')
+plt.xlabel('Rate / Uplift')
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+display(ci_df.style.format({
+    'point_estimate': '{:.4f}',
+    'ci_lower': '{:.4f}',
+    'ci_upper': '{:.4f}'
+}))
+""")
+
+add_md("""**Interpretation:**
+The uplift confidence interval stays above zero, which strengthens the launch recommendation. This view is useful for executives because it frames uncertainty as a range of plausible business outcomes instead of a single test statistic.
 
 ---
 
@@ -376,11 +443,11 @@ plt.show()
 """)
 
 add_md("""**Interpretation:**
-* **`is_variant` (The Treatment Effect):** The odds ratio is approximately 1.25. This means that, *holding all other variables constant* (cart value, device, customer type), users in the Variant group are **25% more likely to convert** than users in the Control group. The p-value ensures this is statistically significant.
-* **`customer_type_Returning`:** Returning customers are heavily predicted to convert (OR ~ 1.55), highlighting the importance of customer retention.
+* **`is_variant` (The Treatment Effect):** The odds ratio is approximately 1.33. This means that, *holding all other variables constant* (cart value, device, customer type), users in the Variant group are about **33% more likely to convert** than users in the Control group.
+* **`customer_type_Returning`:** Returning customers are heavily predicted to convert (OR ~ 1.67), highlighting the importance of customer retention.
 * **`device_type_Mobile`:** As expected based on our EDA, being on a mobile device decreases the odds of conversion compared to Desktop (the dropped reference baseline), as seen by an OR < 1.0.
 
-**Why this matters over the Z-test:** This proves that the 4.5% absolute lift observed initially wasn't a fluke caused by a skewed randomization of returning vs new users. The treatment effect exists strongly even when we control for the environment.
+**Why this matters over the z-test:** This proves that the observed uplift is not just a top-line artifact. Even after controlling for customer mix and device mix, the new checkout still improves conversion, which makes the rollout decision more defensible.
 
 ---
 
@@ -389,7 +456,7 @@ add_md("""**Interpretation:**
 To translate "Odds Ratios" and "Statistical Significance" into business language, let's simulate the annualized revenue impact if we roll this out to 100% of traffic.
 * **Assumptions:** 
     * 100,000 visitors per month (1.2M / year).
-    * Average Order Value (AOV) = $45 (derived from our cart median).
+    * Average Order Value (AOV) is derived from the simulated cart-value median, which is about $33.09 in this run.
 """)
 
 add_code("""annual_visitors = 1_200_000
@@ -408,65 +475,60 @@ print(f"Projected Annual Revenue (Variant Flow): ${variant_revenue:,.2f}")
 print(f"\\n💰 Projected Incremental Revenue: ${incremental_revenue:,.2f} per year")
 """)
 
-add_md("""**Business Takeaway:** Rolling out the One-Click checkout is projected to generate roughly $2.4 million in incremental revenue annually, purely by removing friction in the payment step.
+add_md("""**Business Takeaway:** If this lift holds at scale, rolling out the One-Click checkout is projected to generate about **$1.89 million** in incremental revenue annually by reducing checkout friction.
 
 ---
 
-## 9. Advanced: Bayesian A/B Testing
+## 9. Decision Summary for Stakeholders
 
-While Frequentist methods give us a p-value (probability of observing the data given the null hypothesis), stakeholders often want to know: *"What is the probability that the Variant is actually better than the Control?"* We can answer this using a Bayesian approach.
-
-We'll use a Beta-Binomial model (Beta prior, Binomial likelihood). Since we don't have strong prior beliefs, we'll use an uninformative prior, $\\text{Beta}(1, 1)$.
+This is the version a business analyst would present in a launch review:
+* The new checkout increased conversion rate versus the old flow.
+* The formal test was a **two-proportion z-test** aligned to the directional launch question.
+* The **p-value is materially below 0.05**, so the result is not just visually better; it is statistically defensible.
+* The confidence interval for uplift stays above zero, so the improvement is both significant and directionally reliable.
+* Logistic regression shows the effect remains after controlling for device type, customer type, cart value, and time spent.
 """)
 
-add_code("""from scipy.stats import beta
+add_code("""decision_summary = pd.DataFrame({
+    'Metric': [
+        'Control conversion rate',
+        'Variant conversion rate',
+        'Absolute uplift',
+        'Relative uplift',
+        'Z-statistic',
+        'P-value',
+        '95% CI for uplift'
+    ],
+    'Value': [
+        f'{control_p:.2%}',
+        f'{variant_p:.2%}',
+        f'{uplift:.2%}',
+        f'{relative_lift:.2%}',
+        f'{z_stat:.4f}',
+        f'{p_value:.6f}',
+        f'[{ci_lower:.2%}, {ci_upper:.2%}]'
+    ]
+})
 
-# Prior Beta parameters (uninformative)
-alpha_prior = 1
-beta_prior = 1
-
-# Posterior parameters 
-# Posterior Alpha = Prior Alpha + Successes
-# Posterior Beta = Prior Beta + Failures
-alpha_post_control = alpha_prior + control_conv
-beta_post_control = beta_prior + (control_n - control_conv)
-
-alpha_post_variant = alpha_prior + variant_conv
-beta_post_variant = beta_prior + (variant_n - variant_conv)
-
-# Generate samples from the posterior distributions
-n_samples = 100000
-samples_control = beta.rvs(alpha_post_control, beta_post_control, size=n_samples)
-samples_variant = beta.rvs(alpha_post_variant, beta_post_variant, size=n_samples)
-
-# Calculate the probability that Variant > Control
-prob_variant_better = np.mean(samples_variant > samples_control)
-
-# Calculate expected loss if we choose Variant but it's actually worse
-loss = np.maximum(samples_control - samples_variant, 0)
-expected_loss = np.mean(loss)
-
-print(f"Probability that Variant > Control: {prob_variant_better:.2%}")
-print(f"Expected Loss (drop in conv rate if wrong): {expected_loss:.6f}")
+display(decision_summary)
 """)
 
 add_md("""**Interpretation:**
-* **Probability of superiority:** There is a nearly **100% probability** that the Variant is better than the Control. This is a much more intuitive metric to explain to product managers than a p-value.
-* **Expected Loss:** In the rare event that we are wrong, the expected statistical loss in conversion rate is virtually zero. Rolling this out carries negligible downside risk.
+This table condenses the experiment into the exact facts needed for a go/no-go meeting. It makes the test choice, p-value, and effect size visible in one place.
 
 ---
 
 ## 10. Conclusion & Recommendations
 
 ### Summary of Key Findings:
-1. **Clear Winner:** The "One-Click Checkout" (Variant) outperformed the traditional flow (Control) with a staggering 18% relative uplift in conversion rate.
-2. **Statistical Rigor:** A two-proportion Z-test yielded a p-value < 0.0001. Furthermore, a Logistic Regression analysis confirmed that the variant increases the odds of conversion by ~25%, even when strictly controlling for covariates like device type and cart size.
+1. **Clear Winner:** The "One-Click Checkout" (Variant) outperformed the traditional flow (Control) with an estimated relative uplift of roughly **24.5%** in this seeded run.
+2. **Statistical Rigor:** The formal statistical test was a **two-proportion z-test** with the directional hypotheses `H0: p_new <= p_old` and `H1: p_new > p_old`. The p-value is clearly reported and falls well below 0.05.
 3. **Mobile Friction:** While the variant helped all platforms, Mobile conversion remains structurally lower than Desktop. 
 4. **Loyalty Pays:** Returning customers convert at extraordinarily higher rates, acting as the backbone of site revenue.
 
 ### Recommendations:
-* **Immediate Rollout:** Graduate the A/B test and roll out the One-Click Checkout to 100% of global traffic. 
-* **Next Step - Mobile Optimization:** Initiate a new UX research phase specifically targeting Mobile users. Even with the new checkout, Mobile OR sits at ~0.74 relative to Desktop. We need to investigate upstream friction (e.g., product discovery, page load speeds on 4G) for mobile users.
+* **Launch Decision:** We reject `H0`, which means the evidence supports a statistically significant improvement in conversion. The recommendation is to launch the new checkout.
+* **Next Step - Mobile Optimization:** Initiate a new UX research phase specifically targeting Mobile users. Even with the new checkout, Mobile OR sits at roughly **0.77** relative to Desktop. We need to investigate upstream friction (e.g., product discovery, page load speeds on 4G) for mobile users.
 * **Next Step - Cart Value Segmentation:** Analyze if *extremely* high cart values (>$200) require a different flow (e.g., offering financing options via Affirm/Klarna instead of just one-click) to optimize AOV alongside conversion rate.
 
 ### Limitations:
@@ -476,7 +538,8 @@ add_md("""**Interpretation:**
 
 
 import os
-output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Conversion_Optimization_Analysis.ipynb")
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+output_path = os.path.join(project_root, "Conversion_Optimization_Analysis.ipynb")
 with open(output_path, "w", encoding="utf-8") as f:
     json.dump({"cells": cells, "metadata": {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"}}, "nbformat": 4, "nbformat_minor": 4}, f, indent=1)
 
